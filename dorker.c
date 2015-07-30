@@ -4,7 +4,7 @@
 ** My GitHub: https://github.com/jessesilva
 ** Team  GitHub: https://github.com/P0cL4bs
 ** Compile...
-**  -> Windows: gcc.exe --std=c99 dorker.c -lws2_32 -o dorker.exe & dorker.exe
+**  -> Windows: gcc.exe --std=c99 dorker.c -lws2_32 -o dorker.exe && dorker.exe
 **  -> Linux: gcc -g -Wall -pthread -std=c99 dorker.c -lpthread -o dorker ; ./dorker
 */
 
@@ -609,8 +609,30 @@ static unsigned int path_and_data_filter (const unsigned char *domain, const uns
 				}
 				temporary[b] = instance->path_filter[a];
 			}
+		} else {
+			http_request_t *request = http_request_get(domain, instance->path_filter);
+			if (request != NULL) {
+				if (request->e_200_OK == TRUE && instance->data_filter == NULL) {
+					sprintf(save_buffer, "%s%s%s", (protocol) ? "https://" : "http://",  domain, instance->path_filter);
+					sprintf(path, "%s-paths.txt", instance->dork_list);
+					save(path, save_buffer);
+					result = TRUE;
+				} 
+				else if (request->e_200_OK == TRUE && instance->data_filter != NULL) {
+					if (strstr(request->content, instance->data_filter)) {
+						sprintf(save_buffer, "%s%s%s", (protocol) ? "https://" : "http://", domain, instance->path_filter);
+						sprintf(path, "%s-paths.txt", instance->dork_list);
+						save(path, save_buffer);
+						result = TRUE;
+					}
+					if (request->content)
+						free(request->content);	
+				}
+				
+				free(request);
+			}
 		}
-	}
+	} else result = TRUE;
 	
 	return result;
 }
@@ -688,14 +710,7 @@ static http_request_t *http_request_get (const unsigned char *domain, const unsi
 					memcpy(&response_final[total_length], response, result);
 					total_length += result;
 				}
-			} else if (use_method == 1) {
-				if ((response_final = (unsigned char *) realloc(response_final, total_length + 
-					(sizeof(unsigned char) * MAXLIMIT))) != NULL) {
-					memset(&response_final[total_length], '\0', sizeof(unsigned char) * MAXLIMIT);
-					memcpy(&response_final[total_length], response, result);
-					total_length += result;
-				}
-			}
+			} 
 			else 
 				break;
 		}
