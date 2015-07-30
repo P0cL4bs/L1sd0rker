@@ -178,17 +178,6 @@ int main (int argc, char **argv) {
 		memset(instance->results_full_url, '\0', sizeof(unsigned char) * MAXLIMIT);
 		sprintf(instance->results_full_url, "%s-full_url.txt", instance->dork_list);
 		
-		// --------------------------------------------------------------------------------
-		FILE *x = fopen(instance->results_domains, "w");
-		fclose(x);
-		x = fopen(instance->results_full_url, "w");
-		fclose(x);
-		char pahtxxx[MAXLIMIT];
-		sprintf(pahtxxx, "%s-paths.txt", instance->dork_list);
-		x = fopen(pahtxxx, "w");
-		fclose(x);
-		// --------------------------------------------------------------------------------
-		
 		if ((thread = (thread_t *) xmalloc(sizeof(thread_t))) != NULL) {
 			thread->counter_a = instance->number_of_threads;
 			thread->counter_b = 1;
