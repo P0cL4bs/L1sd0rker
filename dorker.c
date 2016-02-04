@@ -92,6 +92,8 @@ static unsigned int domain_exists (const unsigned char *domain);
 static void save (const unsigned char *path, const unsigned char *content);
 static unsigned int file_exists (const unsigned char *path);
 void *xmalloc (const unsigned int size);
+//void *xcalloc (const unsigned int size);
+void *xcalloc (const unsigned int nmemb, const unsigned int size);
 static void die (const unsigned char *content, const unsigned int exitCode);
 static void banner (void);
 static void help (void);
@@ -104,32 +106,21 @@ int main (int argc, char **argv) {
       die("WSAStartup failed!", EXIT_FAILURE);
 #endif
 	
-	if (!(instance = (instance_t *) xmalloc(sizeof(instance_t)))) {
+	if (!(instance = (instance_t *) xcalloc(1, sizeof(instance_t)))) {
 		say("Error to alloc memory - instance_t struct.\n");
 		exit(EXIT_FAILURE);
 	}
 	
-	memset(instance, 0, sizeof(instance_t));
-	instance->number_of_threads = 0;
 	instance->scan_method = 3;
-	instance->top_level = NULL;
-	instance->dork_list = NULL;
-	instance->path_filter = NULL;
-	instance->data_filter = NULL;
-	instance->search_engine = NULL;
-	instance->results_domains = NULL;
-	instance->results_full_url = NULL;
-	
-	if (!(statistics = (statistics_t *) xmalloc(sizeof(statistics_t)))) {
+
+	if (!(statistics = (statistics_t *) xcalloc(1, sizeof(statistics_t)))) {
 		say("Error to alloc memory - statistics_t struct.\n");
 		exit(EXIT_FAILURE);
 	}
-	statistics->total_sites = 0;
 	
 #define COPY_ARGS_TO_STRUCT(PTR)\
 	if (a+1 < argc)\
-		if ((PTR = (unsigned char *) xmalloc(sizeof(unsigned char) * (strlen(argv[a+1])+1))) != NULL) {\
-			memset(PTR, '\0', sizeof(unsigned char) * (strlen(argv[a+1])+1));\
+		if ((PTR = (unsigned char *) xcalloc((strlen(argv[a+1])+1), sizeof(unsigned char))) != NULL) {\
 			memcpy(PTR, argv[a+1], strlen(argv[a+1])); }
 	
 	for (int a=0; a<argc; a++) {
@@ -172,12 +163,10 @@ int main (int argc, char **argv) {
 			exit(EXIT_FAILURE);
 		}
 		
-		instance->results_domains = (unsigned char *) xmalloc(sizeof(unsigned char) * MAXLIMIT);
-		memset(instance->results_domains, '\0', sizeof(unsigned char) * MAXLIMIT);
+		instance->results_domains = (unsigned char *) xcalloc(MAXLIMIT, sizeof(unsigned char));
 		sprintf(instance->results_domains, "%s-domains.txt", instance->dork_list);
 		
-		instance->results_full_url = (unsigned char *) xmalloc(sizeof(unsigned char) * MAXLIMIT);
-		memset(instance->results_full_url, '\0', sizeof(unsigned char) * MAXLIMIT);
+		instance->results_full_url = (unsigned char *) xcalloc(MAXLIMIT, sizeof(unsigned char));
 		sprintf(instance->results_full_url, "%s-full_url.txt", instance->dork_list);
 		
 		if ((thread = (thread_t *) xmalloc(sizeof(thread_t))) != NULL) {
@@ -208,8 +197,7 @@ int main (int argc, char **argv) {
 				
 				if (thread->counter_a) {
 					param_t *param = (param_t *) xmalloc(sizeof(param_t)); 
-					param->line = (unsigned char *) xmalloc((strlen(line) * sizeof(unsigned char)) + MAXLIMIT);
-					memset(param->line, '\0', (strlen(line) * sizeof(unsigned char)) + MAXLIMIT);
+					param->line = (unsigned char *) xcalloc(MAXLIMIT, (strlen(line) * sizeof(unsigned char)));
 					memcpy(param->line, line, strlen(line));
 					param->index = thread->counter_c;
 					thread->counter_b++;
@@ -257,6 +245,8 @@ int main (int argc, char **argv) {
 		free(instance->search_engine);
 	if (instance)
 		free(instance);
+
+	free(statistics);
 	
 #ifdef WINUSER
 	WSACleanup();
@@ -355,16 +345,14 @@ static void bing (const unsigned char *dork) {
 			"Accept-Encoding: identity\r\n"
 			"Connection: Close\r\n\r\n";
 
-		unsigned char *final_dork = (unsigned char *) xmalloc(sizeof(unsigned char) * (MAXLIMIT + strlen(dork)));
-		memset(final_dork, '\0', sizeof(unsigned char) * (MAXLIMIT + strlen(dork)));
+		unsigned char *final_dork = (unsigned char *) xcalloc( (MAXLIMIT + strlen(dork)), sizeof(unsigned char) );
 		memcpy(final_dork, dork, strlen(dork));
 		
 		for (int a=0; final_dork[a]!='\0'; a++)
 			if (final_dork[a] == ' ')
 				final_dork[a] = '+';
 		
-		unsigned char *header_final = (unsigned char *) xmalloc(sizeof(unsigned char) * (strlen(header) + MAXLIMIT));
-		memset(header_final, '\0', sizeof(unsigned char) * (strlen(header) + MAXLIMIT));
+		unsigned char *header_final = (unsigned char *) xcalloc((strlen(header) + MAXLIMIT) , sizeof(unsigned char) );
 		sprintf(header_final, "GET /search?q=%s&first=%d1&FORM=PERE HTTP/1.1\r\n%s", final_dork, page, header);
 		
 		if (send(sock, header_final, strlen(header_final), 0) == -1) {
@@ -378,10 +366,8 @@ static void bing (const unsigned char *dork) {
 		result = 0;
 		unsigned int is_going = 1;
 		unsigned int total_length = 0;
-		unsigned char *response = (unsigned char *) xmalloc(sizeof(unsigned char) * (MAXLIMIT*2));
-		memset(response, '\0', sizeof(unsigned char) * (MAXLIMIT*2));
-		unsigned char *response_final = (unsigned char *) xmalloc(sizeof(unsigned char) * (MAXLIMIT*2));
-		memset(response_final, '\0', sizeof(unsigned char) * (MAXLIMIT*2));
+		unsigned char *response = (unsigned char *) xcalloc((MAXLIMIT*2), sizeof(unsigned char));
+		unsigned char *response_final = (unsigned char *) xcalloc( (MAXLIMIT*2), sizeof(unsigned char));
 		
 		while (is_going) {
 			result = recv(sock, response, (sizeof(unsigned char) * (MAXLIMIT*2)) - 1, 0);
@@ -451,8 +437,7 @@ static void extract_urls_and_domains (unsigned char *content) {
 				else
 					a += 5;
 				
-				unsigned char *url = (unsigned char *) xmalloc(sizeof(unsigned char) * (a + 1));
-				memset(url, '\0', sizeof(unsigned char) * (a + 1));
+				unsigned char *url = (unsigned char *) xcalloc((a + 1), sizeof(unsigned char));
 				memcpy(url, pointer, a);
 				
 				if (url)
@@ -484,8 +469,7 @@ static void filter_url (const unsigned char *url, const unsigned int protocol) {
 		!strstr(url, "<") &&
 		strstr(url, ".")) 
 	{	
-		unsigned char *domain = (unsigned char *) xmalloc(sizeof(unsigned char) * strlen(url));
-		memset(domain, '\0', sizeof(unsigned char) * strlen(url));
+		unsigned char *domain = (unsigned char *) xcalloc(strlen(url), sizeof(unsigned char));
 		unsigned char *pointer = strstr(url, "://");
 		unsigned int a = 0;
 		
@@ -674,8 +658,7 @@ static http_request_t *http_request_get (const unsigned char *domain, const unsi
 		"Accept-Encoding: identity\r\n"
 		"Connection: Close\r\n\r\n";
 
-	unsigned char *header_final = (unsigned char *) xmalloc(sizeof(unsigned char) * (strlen(header) + MAXLIMIT));
-	memset(header_final, '\0', sizeof(unsigned char) * (strlen(header) + MAXLIMIT));
+	unsigned char *header_final = (unsigned char *) xcalloc( (strlen(header) + MAXLIMIT), sizeof(unsigned char) );
 	sprintf(header_final, "GET %s HTTP/1.1\r\nHost: %s\r\n%s", path, domain, header);
 	
 	if (send(sock, header_final, strlen(header_final), 0) == -1) {
@@ -688,10 +671,8 @@ static http_request_t *http_request_get (const unsigned char *domain, const unsi
 	result = 0;
 	unsigned int is_going = 1;
 	unsigned int total_length = 0;
-	unsigned char *response = (unsigned char *) xmalloc(sizeof(unsigned char) * (MAXLIMIT*2));
-	memset(response, '\0', sizeof(unsigned char) * (MAXLIMIT*2));
-	unsigned char *response_final = (unsigned char *) xmalloc(sizeof(unsigned char) * (MAXLIMIT*2));
-	memset(response_final, '\0', sizeof(unsigned char) * (MAXLIMIT*2));
+	unsigned char *response = (unsigned char *) xcalloc( (MAXLIMIT*2), sizeof(unsigned char));
+	unsigned char *response_final = (unsigned char *) xcalloc( (MAXLIMIT*2), sizeof(unsigned char));
 	
 	while (is_going) {
 		result = recv(sock, response, (sizeof(unsigned char) * MAXLIMIT) - 1, 0);
@@ -723,8 +704,7 @@ static http_request_t *http_request_get (const unsigned char *domain, const unsi
 	if (total_length > 0 && response_final != NULL) {
 		if (instance->data_filter != NULL) {
 			request->length = total_length;
-			request->content = (unsigned char *) xmalloc(sizeof(unsigned char) * (total_length + 1));
-			memset(request->content, '\0', sizeof(unsigned char) * (total_length + 1));
+			request->content = (unsigned char *) xcalloc( (total_length + 1) , sizeof(unsigned char));
 			memcpy(request->content, response_final, total_length);
 		}
 		
@@ -788,6 +768,15 @@ void *xmalloc (const unsigned int size) {
 		return NULL;
 	void *pointer = NULL;
 	if ((pointer = malloc(size)) != NULL) 
+		return pointer;
+	return NULL;
+}
+
+void *xcalloc (const unsigned int nmemb, const unsigned int size) {
+	if (!size)
+		return NULL;
+	void *pointer = NULL;
+	if ((pointer = calloc(nmemb, size)) != NULL) 
 		return pointer;
 	return NULL;
 }
