@@ -4,11 +4,10 @@
 ** My GitHub: https://github.com/jessesilva
 ** Team  GitHub: https://github.com/P0cL4bs
 ** Compile...
-**  -> Windows: gcc.exe --std=c99 dorker.c -lws2_32 -o dorker.exe && dorker.exe
+**  -> Windows: gcc.exe --std=c99 dorker.c -lws2_32 -o dorker.exe -DWINUSER && dorker.exe
 **  -> Linux: gcc -g -Wall -pthread -std=c99 dorker.c -lpthread -o dorker ; ./dorker
 */
 
-#define WINUSER // Usuarios Linux comentar esta linha.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
