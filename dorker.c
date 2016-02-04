@@ -27,6 +27,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+typedef unsigned long u_long;
+
 #endif
 
 #define MAXLIMIT 256
