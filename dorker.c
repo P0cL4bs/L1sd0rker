@@ -196,8 +196,8 @@ int main (int argc, char **argv) {
 					}
 				
 				if (thread->counter_a) {
-					param_t *param = (param_t *) xmalloc(sizeof(param_t)); 
-					param->line = (unsigned char *) xcalloc(MAXLIMIT, (strlen(line) * sizeof(unsigned char)));
+					param_t *param = (param_t *) xmalloc(sizeof(param_t));
+					param->line = (unsigned char *) xcalloc( MAXLIMIT + strlen(line) ,sizeof(unsigned char)));
 					memcpy(param->line, line, strlen(line));
 					param->index = thread->counter_c;
 					thread->counter_b++;
@@ -247,6 +247,7 @@ int main (int argc, char **argv) {
 		free(instance);
 
 	free(statistics);
+	free(thread);
 	
 #ifdef WINUSER
 	WSACleanup();
@@ -295,6 +296,10 @@ static void core (const void *tparam) {
 	
 	thread->counter_a++;
 	thread->counter_b--;
+
+	free(param->line);
+	free(param);
+
 }
 
 static void google (const unsigned char *dork) {
