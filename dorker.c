@@ -197,7 +197,7 @@ int main (int argc, char **argv) {
 				
 				if (thread->counter_a) {
 					param_t *param = (param_t *) xmalloc(sizeof(param_t));
-					param->line = (unsigned char *) xcalloc( MAXLIMIT + strlen(line) ,sizeof(unsigned char)));
+					param->line = (unsigned char *) xcalloc( MAXLIMIT + strlen(line) ,sizeof(unsigned char) );
 					memcpy(param->line, line, strlen(line));
 					param->index = thread->counter_c;
 					thread->counter_b++;
