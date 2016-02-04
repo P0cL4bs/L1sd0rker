@@ -44,18 +44,18 @@ typedef unsigned long u_long;
 typedef struct {
 	unsigned int number_of_threads;			/* Número de threads. */
 	unsigned int scan_method;				/* Método de scaneamento. */
-	unsigned char *top_level;				/* Top-level list. */
-	unsigned char *dork_list;				/* Lista de dorks. */
-	unsigned char *path_filter;				/* Path para buscar. */
-	unsigned char *data_filter;				/* Dados para buscar no conteúdo da página. */
-	unsigned char *search_engine;			/* Lista de buscadores utilizados. */
-	unsigned char *results_domains;			/* Arquivo de resultados contendo apenas o domínio. */
-	unsigned char *results_full_url;		/* Arquivo de resultados com URL completa. */
+	char *top_level;				/* Top-level list. */
+	char *dork_list;				/* Lista de dorks. */
+	char *path_filter;				/* Path para buscar. */
+	char *data_filter;				/* Dados para buscar no conteúdo da página. */
+	char *search_engine;			/* Lista de buscadores utilizados. */
+	char *results_domains;			/* Arquivo de resultados contendo apenas o domínio. */
+	char *results_full_url;		/* Arquivo de resultados com URL completa. */
 } instance_t;
 
 typedef struct {
 	unsigned int index;						/* Identificador. */
-	unsigned char *line;					/* Linha pega da lista de dorks. */
+	char *line;					/* Linha pega da lista de dorks. */
 } param_t;
 
 typedef struct {
@@ -70,7 +70,7 @@ typedef struct {
 } statistics_t;
 
 typedef struct {							/* Controle das requisições HTTP. */
-	unsigned char *content;
+	char *content;
 	unsigned int length;
 	unsigned int e_200_OK;
 } http_request_t;
@@ -80,21 +80,21 @@ thread_t *thread;
 statistics_t *statistics;
 
 static void core (const void *tparam);
-static void bing (const unsigned char *dork);
-static void google (const unsigned char *dork);
-static void hotbot (const unsigned char *dork);
-static void duckduckgo (const unsigned char *dork);
-static void extract_urls_and_domains (unsigned char *content);
-static void filter_url (const unsigned char *url, const unsigned int protocol);
-static unsigned int path_and_data_filter (const unsigned char *domain, const unsigned int protocol);
-static http_request_t *http_request_get (const unsigned char *domain, const unsigned char *path);
-static unsigned int domain_exists (const unsigned char *domain);
-static void save (const unsigned char *path, const unsigned char *content);
-static unsigned int file_exists (const unsigned char *path);
+static void bing (const char *dork);
+static void google (const char *dork);
+static void hotbot (const char *dork);
+static void duckduckgo (const char *dork);
+static void extract_urls_and_domains (char *content);
+static void filter_url (const char *url, const unsigned int protocol);
+static unsigned int path_and_data_filter (const char *domain, const unsigned int protocol);
+static http_request_t *http_request_get (const char *domain, const char *path);
+static unsigned int domain_exists (const char *domain);
+static void save (const char *path, const char *content);
+static unsigned int file_exists (const char *path);
 void *xmalloc (const unsigned int size);
 //void *xcalloc (const unsigned int size);
 void *xcalloc (const unsigned int nmemb, const unsigned int size);
-static void die (const unsigned char *content, const unsigned int exitCode);
+static void die (const char *content, const unsigned int exitCode);
 static void banner (void);
 static void help (void);
 
@@ -120,7 +120,7 @@ int main (int argc, char **argv) {
 	
 #define COPY_ARGS_TO_STRUCT(PTR)\
 	if (a+1 < argc)\
-		if ((PTR = (unsigned char *) xcalloc((strlen(argv[a+1])+1), sizeof(unsigned char))) != NULL) {\
+		if ((PTR = (char *) xcalloc((strlen(argv[a+1])+1), sizeof(char))) != NULL) {\
 			memcpy(PTR, argv[a+1], strlen(argv[a+1])); }
 	
 	for (int a=0; a<argc; a++) {
@@ -163,10 +163,10 @@ int main (int argc, char **argv) {
 			exit(EXIT_FAILURE);
 		}
 		
-		instance->results_domains = (unsigned char *) xcalloc(MAXLIMIT, sizeof(unsigned char));
+		instance->results_domains = (char *) xcalloc(MAXLIMIT, sizeof(char));
 		sprintf(instance->results_domains, "%s-domains.txt", instance->dork_list);
 		
-		instance->results_full_url = (unsigned char *) xcalloc(MAXLIMIT, sizeof(unsigned char));
+		instance->results_full_url = (char *) xcalloc(MAXLIMIT, sizeof(char));
 		sprintf(instance->results_full_url, "%s-full_url.txt", instance->dork_list);
 		
 		if ((thread = (thread_t *) xmalloc(sizeof(thread_t))) != NULL) {
@@ -182,7 +182,7 @@ int main (int argc, char **argv) {
 			thread->counter_a = 1;
 		
 		FILE *handle = NULL;
-		unsigned char line [MAXLIMIT];
+		char line [MAXLIMIT];
 		memset(line, '\0', MAXLIMIT);
 
 		if ((handle = fopen(instance->dork_list, "r")) != NULL) {
@@ -197,7 +197,7 @@ int main (int argc, char **argv) {
 				
 				if (thread->counter_a) {
 					param_t *param = (param_t *) xmalloc(sizeof(param_t));
-					param->line = (unsigned char *) xcalloc( MAXLIMIT + strlen(line) ,sizeof(unsigned char) );
+					param->line = (char *) xcalloc( MAXLIMIT + strlen(line) ,sizeof(char) );
 					memcpy(param->line, line, strlen(line));
 					param->index = thread->counter_c;
 					thread->counter_b++;
@@ -302,19 +302,19 @@ static void core (const void *tparam) {
 
 }
 
-static void google (const unsigned char *dork) {
+static void google (const char *dork) {
 	;
 }
 
-static void hotbot (const unsigned char *dork) {
+static void hotbot (const char *dork) {
 	;
 }
 
-static void duckduckgo (const unsigned char *dork) {
+static void duckduckgo (const char *dork) {
 	;
 }
 
-static void bing (const unsigned char *dork) {
+static void bing (const char *dork) {
 	if (!dork) return;
 	
 	for (unsigned int page=0; page<1000; page++) {
@@ -342,7 +342,7 @@ static void bing (const unsigned char *dork) {
 			return;
 		}
 		
-		unsigned char header [] = 
+		char header [] = 
 			"Host: www.bing.com\r\n"
 			"User-Agent: Mozilla/5.0 (Windows NT 6.1; Trident/7.0; SLCC2; "
 			".NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; "
@@ -350,14 +350,14 @@ static void bing (const unsigned char *dork) {
 			"Accept-Encoding: identity\r\n"
 			"Connection: Close\r\n\r\n";
 
-		unsigned char *final_dork = (unsigned char *) xcalloc( (MAXLIMIT + strlen(dork)), sizeof(unsigned char) );
+		char *final_dork = (char *) xcalloc( (MAXLIMIT + strlen(dork)), sizeof(char) );
 		memcpy(final_dork, dork, strlen(dork));
 		
 		for (int a=0; final_dork[a]!='\0'; a++)
 			if (final_dork[a] == ' ')
 				final_dork[a] = '+';
 		
-		unsigned char *header_final = (unsigned char *) xcalloc((strlen(header) + MAXLIMIT) , sizeof(unsigned char) );
+		char *header_final = (char *) xcalloc((strlen(header) + MAXLIMIT) , sizeof(char) );
 		sprintf(header_final, "GET /search?q=%s&first=%d1&FORM=PERE HTTP/1.1\r\n%s", final_dork, page, header);
 		
 		if (send(sock, header_final, strlen(header_final), 0) == -1) {
@@ -371,17 +371,17 @@ static void bing (const unsigned char *dork) {
 		result = 0;
 		unsigned int is_going = 1;
 		unsigned int total_length = 0;
-		unsigned char *response = (unsigned char *) xcalloc((MAXLIMIT*2), sizeof(unsigned char));
-		unsigned char *response_final = (unsigned char *) xcalloc( (MAXLIMIT*2), sizeof(unsigned char));
+		char *response = (char *) xcalloc((MAXLIMIT*2), sizeof(char));
+		char *response_final = (char *) xcalloc( (MAXLIMIT*2), sizeof(char));
 		
 		while (is_going) {
-			result = recv(sock, response, (sizeof(unsigned char) * (MAXLIMIT*2)) - 1, 0);
+			result = recv(sock, response, (sizeof(char) * (MAXLIMIT*2)) - 1, 0);
 			if (result == 0 || result < 0)
 				is_going = 0;
 			else {
-				if ((response_final = (unsigned char *) realloc(response_final, total_length + 
-					(sizeof(unsigned char) * (MAXLIMIT*2)))) != NULL) {
-					memset(&response_final[total_length], '\0', sizeof(unsigned char) * (MAXLIMIT*2));
+				if ((response_final = (char *) realloc(response_final, total_length + 
+					(sizeof(char) * (MAXLIMIT*2)))) != NULL) {
+					memset(&response_final[total_length], '\0', sizeof(char) * (MAXLIMIT*2));
 					memcpy(&response_final[total_length], response, result);
 					total_length += result;
 				}
@@ -406,11 +406,11 @@ static void bing (const unsigned char *dork) {
 	}
 }
 
-static void extract_urls_and_domains (unsigned char *content) {
+static void extract_urls_and_domains (char *content) {
 	if (!content)
 		return;
 	
-	unsigned char *pointer = content;
+	char *pointer = content;
 	while (1) {
 		pointer = strstr(pointer += 7, "://");
 		if (!pointer) break;
@@ -442,7 +442,7 @@ static void extract_urls_and_domains (unsigned char *content) {
 				else
 					a += 5;
 				
-				unsigned char *url = (unsigned char *) xcalloc((a + 1), sizeof(unsigned char));
+				char *url = (char *) xcalloc((a + 1), sizeof(char));
 				memcpy(url, pointer, a);
 				
 				if (url)
@@ -455,7 +455,7 @@ static void extract_urls_and_domains (unsigned char *content) {
 	}
 }
 
-static void filter_url (const unsigned char *url, const unsigned int protocol) {
+static void filter_url (const char *url, const unsigned int protocol) {
 	if (!url)
 		return;
 	
@@ -474,8 +474,8 @@ static void filter_url (const unsigned char *url, const unsigned int protocol) {
 		!strstr(url, "<") &&
 		strstr(url, ".")) 
 	{	
-		unsigned char *domain = (unsigned char *) xcalloc(strlen(url), sizeof(unsigned char));
-		unsigned char *pointer = strstr(url, "://");
+		char *domain = (char *) xcalloc(strlen(url), sizeof(char));
+		char *pointer = strstr(url, "://");
 		unsigned int a = 0;
 		
 		pointer += strlen("://");
@@ -520,7 +520,7 @@ static void filter_url (const unsigned char *url, const unsigned int protocol) {
 		}
 		
 		if (instance->top_level != NULL) {
-			unsigned char temporary [MAXLIMIT];
+			char temporary [MAXLIMIT];
 			if (strstr(instance->top_level, ",")) {
 				for (int a=0,b=0; ; a++,b++) {
 					if (instance->top_level[a] == ',' || instance->top_level[a] == '\0') {
@@ -539,7 +539,7 @@ static void filter_url (const unsigned char *url, const unsigned int protocol) {
 		}
 		
 		if (top_level_enabled == FALSE) {
-			unsigned char temporary [MAXLIMIT];
+			char temporary [MAXLIMIT];
 			unsigned int flag_control = FALSE;
 			
 			if (instance->top_level != NULL) {
@@ -556,16 +556,16 @@ static void filter_url (const unsigned char *url, const unsigned int protocol) {
 	}
 }
 
-static unsigned int path_and_data_filter (const unsigned char *domain, const unsigned int protocol) {
+static unsigned int path_and_data_filter (const char *domain, const unsigned int protocol) {
 	if (!domain)
 		return FALSE;
 	
 	unsigned int result = FALSE;
-	unsigned char path [MAXLIMIT*2];
-	unsigned char save_buffer [MAXLIMIT*2];
+	char path [MAXLIMIT*2];
+	char save_buffer [MAXLIMIT*2];
 	
 	if (instance->path_filter != NULL) {
-		unsigned char temporary [MAXLIMIT];
+		 char temporary [MAXLIMIT];
 		if (strstr(instance->path_filter, ",")) {
 			for (int a=0,b=0; ; a++,b++) {
 				if (instance->path_filter[a] == ',' || instance->path_filter[a] == '\0') {
@@ -628,7 +628,7 @@ static unsigned int path_and_data_filter (const unsigned char *domain, const uns
 	return result;
 }
 
-static http_request_t *http_request_get (const unsigned char *domain, const unsigned char *path) {
+static http_request_t *http_request_get (const char *domain, const char *path) {
 	if (!domain)
 		return (http_request_t *) NULL;
 	
@@ -656,14 +656,14 @@ static http_request_t *http_request_get (const unsigned char *domain, const unsi
 		return (http_request_t *) NULL;
 	}
 	
-	unsigned char header [] = 
+	char header [] = 
 		"User-Agent: Mozilla/5.0 (Windows NT 6.1; Trident/7.0; SLCC2; "
 		".NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; "
 		"Media Center PC 6.0; .NET4.0C; .NET4.0E; rv:11.0) like Gecko\r\n"
 		"Accept-Encoding: identity\r\n"
 		"Connection: Close\r\n\r\n";
 
-	unsigned char *header_final = (unsigned char *) xcalloc( (strlen(header) + MAXLIMIT), sizeof(unsigned char) );
+	char *header_final = ( char *) xcalloc( (strlen(header) + MAXLIMIT), sizeof( char) );
 	sprintf(header_final, "GET %s HTTP/1.1\r\nHost: %s\r\n%s", path, domain, header);
 	
 	if (send(sock, header_final, strlen(header_final), 0) == -1) {
@@ -676,25 +676,25 @@ static http_request_t *http_request_get (const unsigned char *domain, const unsi
 	result = 0;
 	unsigned int is_going = 1;
 	unsigned int total_length = 0;
-	unsigned char *response = (unsigned char *) xcalloc( (MAXLIMIT*2), sizeof(unsigned char));
-	unsigned char *response_final = (unsigned char *) xcalloc( (MAXLIMIT*2), sizeof(unsigned char));
+	char *response = (char *) xcalloc( (MAXLIMIT*2), sizeof(char));
+	char *response_final = (char *) xcalloc( (MAXLIMIT*2), sizeof(char));
 	
 	while (is_going) {
-		result = recv(sock, response, (sizeof(unsigned char) * MAXLIMIT) - 1, 0);
+		result = recv(sock, response, (sizeof(char) * MAXLIMIT) - 1, 0);
 		if (result == 0 || result < 0)
 			is_going = 0;
 		else {
 			if (!strstr(response, "\r\n\r\n") && instance->data_filter == NULL) {
-				if ((response_final = (unsigned char *) realloc(response_final, total_length + 
-					(sizeof(unsigned char) * MAXLIMIT))) != NULL) {
-					memset(&response_final[total_length], '\0', sizeof(unsigned char) * MAXLIMIT);
+				if ((response_final = (char *) realloc(response_final, total_length + 
+					(sizeof(char) * MAXLIMIT))) != NULL) {
+					memset(&response_final[total_length], '\0', sizeof(char) * MAXLIMIT);
 					memcpy(&response_final[total_length], response, result);
 					total_length += result;
 				}
 			} else if (instance->data_filter != NULL) {
-				if ((response_final = (unsigned char *) realloc(response_final, total_length + 
-					(sizeof(unsigned char) * MAXLIMIT))) != NULL) {
-					memset(&response_final[total_length], '\0', sizeof(unsigned char) * MAXLIMIT);
+				if ((response_final = ( char *) realloc(response_final, total_length + 
+					(sizeof( char) * MAXLIMIT))) != NULL) {
+					memset(&response_final[total_length], '\0', sizeof(char) * MAXLIMIT);
 					memcpy(&response_final[total_length], response, result);
 					total_length += result;
 				}
@@ -709,7 +709,7 @@ static http_request_t *http_request_get (const unsigned char *domain, const unsi
 	if (total_length > 0 && response_final != NULL) {
 		if (instance->data_filter != NULL) {
 			request->length = total_length;
-			request->content = (unsigned char *) xcalloc( (total_length + 1) , sizeof(unsigned char));
+			request->content = (char *) xcalloc( (total_length + 1) , sizeof(char));
 			memcpy(request->content, response_final, total_length);
 		}
 		
@@ -725,11 +725,11 @@ static http_request_t *http_request_get (const unsigned char *domain, const unsi
 	return request;
 }
 
-static unsigned int domain_exists (const unsigned char *domain) {
+static unsigned int domain_exists (const char *domain) {
 	if (!domain)
 		return FALSE;
 	FILE *handle = NULL;
-	unsigned char line [MAXLIMIT];
+	char line [MAXLIMIT];
 	unsigned int flag_exists = FALSE;
 	memset(line, '\0', MAXLIMIT);
 	if ((handle = fopen(instance->results_domains, "r")) != NULL) {
@@ -747,7 +747,7 @@ static unsigned int domain_exists (const unsigned char *domain) {
 	return FALSE;
 }
 
-static void save (const unsigned char *path, const unsigned char *content) {
+static void save (const char *path, const char *content) {
 	if (!path || !content)
 		return;
 	FILE *handle = NULL;
@@ -757,7 +757,7 @@ static void save (const unsigned char *path, const unsigned char *content) {
 	}
 }
 
-static unsigned int file_exists (const unsigned char *path) {
+static unsigned int file_exists (const char *path) {
 	if (!path)
 		return FALSE;
 	FILE *handle = NULL;
@@ -786,7 +786,7 @@ void *xcalloc (const unsigned int nmemb, const unsigned int size) {
 	return NULL;
 }
 
-static void die (const unsigned char *content, const unsigned int exitCode) {
+static void die (const char *content, const unsigned int exitCode) {
 	say("%s", content);
 	exit(exitCode);
 }
