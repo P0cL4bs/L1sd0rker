@@ -79,7 +79,7 @@ instance_t *instance;
 thread_t *thread;
 statistics_t *statistics;
 
-static void core (const void *tparam);
+static void *core (void *tparam);
 static void bing (const char *dork);
 static void google (const char *dork);
 static void hotbot (const char *dork);
@@ -206,7 +206,7 @@ int main (int argc, char **argv) {
 					CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) core, (void *) param, 0, 0);
 #else 
 					pthread_t td;
-					pthread_create(&td, NULL, core, (void *) param);
+					pthread_create(&td, NULL, &core, (void *) param);
 #endif
 				}
 
@@ -256,7 +256,7 @@ int main (int argc, char **argv) {
 	return 0;
 }
 
-static void core (const void *tparam) {
+static void *core (void *tparam) {
 	param_t *param = (param_t *) tparam;
 	int one = 0, two = 0, three = 0, four = 0;
 	
@@ -299,6 +299,8 @@ static void core (const void *tparam) {
 
 	free(param->line);
 	free(param);
+
+	return NULL;
 
 }
 
