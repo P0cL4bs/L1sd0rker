@@ -12,9 +12,9 @@
 #include <string.h>
 #include <stdlib.h>
 #ifdef WINUSER
-#include <Winsock2.h>
+#include <winsock2.h>
 #include <ws2tcpip.h>
-#include <Windows.h>
+#include <windows.h>
 #define close closesocket
 #define sleep Sleep
 #else
